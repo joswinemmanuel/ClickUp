@@ -1,4 +1,4 @@
-# Project Title
+# ClickUp
 
 ## Description
 This project is a task management application built with Django. It allows users to create, manage, and collaborate on tasks efficiently.
