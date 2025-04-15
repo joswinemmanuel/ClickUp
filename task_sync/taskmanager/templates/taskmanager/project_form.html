@@ -1,0 +1,41 @@
+{% extends 'taskmanager/base.html' %}
+
+{% block title %}{% if form.instance.id %}Edit Project{% else %}New Project{% endif %} | Tasksync{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>{% if form.instance.id %}Edit Project{% else %}Create New Project{% endif %}</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Project Name</label>
+                        {{ form.name.errors }}
+                        <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                               id="{{ form.name.id_for_label }}" name="{{ form.name.html_name }}"
+                               value="{{ form.name.value|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description.errors }}
+                        <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                                  id="{{ form.description.id_for_label }}" name="{{ form.description.html_name }}"
+                                  rows="5">{{ form.description.value|default:'' }}</textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'project_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">{% if form.instance.id %}Update{% else %}Create{% endif %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

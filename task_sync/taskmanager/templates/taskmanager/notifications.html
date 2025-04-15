@@ -1,0 +1,46 @@
+{% extends 'taskmanager/base.html' %}
+
+{% block title %}Notifications - Tasksync{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Notifications</h4>
+    </div>
+    <div class="card-body">
+        {% if notifications %}
+            <div class="row">
+                {% for notification in notifications %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-bell-fill text-primary"></i> {{ notification.title }}
+                                </h5>
+                                <p class="card-text">
+                                    <strong>Task ID:</strong> {{ notification.task_id }}<br>
+                                    <strong>Due Date:</strong> {{ notification.due_date }}
+                                </p>
+                                <div class="d-flex justify-content-between">
+                                    <span class="badge
+                                        {% if notification.status == "Pending" %}bg-warning text-dark{% elif notification.status == "Completed" %}bg-success{% endif %}">
+                                        {{ notification.status }}
+                                    </span>
+                                    <span class="badge
+                                        {% if notification.priority == "High" %}bg-danger{% elif notification.priority == "Medium" %}bg-primary{% else %}bg-secondary{% endif %}">
+                                        {{ notification.priority }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                No notifications for today.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'taskmanager/base.html' %}
+
+{% block title %}Dashboard | Tasksync{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="text-center">Dashboard</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-folder-fill"></i> My Projects</h5>
+            </div>
+            <div class="card-body">
+                {% if user_projects %}
+                <div class="list-group">
+                    {% for project in user_projects %}
+                    <a href="{% url 'project_detail' pk=project.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-1">{{ project.name }}</h5>
+                            <small>{{ project.tasks.count }} tasks</small>
+                        </div>
+                        <p class="mb-1 text-muted">{{ project.description|truncatechars:100 }}</p>
+                        <small>Created: {{ project.created_at|date:"M d, Y" }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">You don't have any projects yet.</p>
+                <a href="{% url 'project_create' %}" class="btn btn-outline-primary">Create Project</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-list-task"></i> My Tasks</h5>
+            </div>
+            <div class="card-body">
+                {% if user_tasks %}
+                <div class="list-group">
+                    {% for task in user_tasks %}
+                    <a href="{% url 'task_update' pk=task.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-1">{{ task.title }}</h5>
+                            <span class="badge {% if task.status == 'todo' %}bg-secondary{% elif task.status == 'in_progress' %}bg-primary{% elif task.status == 'review' %}bg-info{% else %}bg-success{% endif %}">
+                                {{ task.get_status_display }}
+                            </span>
+                        </div>
+                        <p class="mb-1 text-muted">{{ task.description|truncatechars:100 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small>Project: {{ task.project.name }}</small>
+                            <span class="badge {% if task.priority == 'low' %}bg-success{% elif task.priority == 'medium' %}bg-warning{% elif task.priority == 'high' %}bg-danger{% else %}bg-dark{% endif %}">
+                                {{ task.get_priority_display }}
+                            </span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">You don't have any assigned tasks.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

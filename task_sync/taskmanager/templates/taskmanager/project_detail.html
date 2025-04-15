@@ -1,0 +1,276 @@
+{% extends 'taskmanager/base.html' %}
+
+{% block title %}{{ project.name }} | Tasksync{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>{{ project.name }}</h2>
+        <p class="text-muted">Created by {{ project.created_by.username }} on {{ project.created_at|date:"F j, Y" }}</p>
+    </div>
+    <div class="col-auto">
+        {% if can_edit %}
+        <a href="{% url 'task_create' project_id=project.id %}" class="btn btn-primary me-2">
+            <i class="bi bi-plus-circle"></i> Add Task
+        </a>
+        {% endif %}
+
+        {% if is_admin %}
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-gear"></i> Project Actions
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="{% url 'add_collaborator' project_id=project.id %}">
+                        <i class="bi bi-people"></i> Manage Collaborators
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'document_upload' project_id=project.id %}">
+                        <i class="bi bi-file-earmark-plus"></i> Upload Document
+                    </a>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <ul class="nav nav-tabs card-header-tabs" id="projectTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="tasks-tab" data-bs-toggle="tab" href="#tasks" role="tab" aria-controls="tasks" aria-selected="true">Tasks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="documents-tab" data-bs-toggle="tab" href="#documents" role="tab" aria-controls="documents" aria-selected="false">Documents</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="collaborators-tab" data-bs-toggle="tab" href="#collaborators" role="tab" aria-controls="collaborators" aria-selected="false">Collaborators</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="projectTabContent">
+                    <div class="tab-pane fade show active" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
+                        {% if tasks %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Assignee</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Due Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in tasks %}
+                                    <tr>
+                                        <td>{{ task.title }}</td>
+                                        <td>
+                                            {% if task.assignee %}
+                                            {{ task.assignee.username }}
+                                            {% else %}
+                                            <span class="text-muted">Unassigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if task.status == 'todo' %}bg-secondary{% elif task.status == 'in_progress' %}bg-primary{% elif task.status == 'review' %}bg-info{% else %}bg-success{% endif %}">
+                                                {{ task.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if task.priority == 'low' %}bg-success{% elif task.priority == 'medium' %}bg-warning{% elif task.priority == 'high' %}bg-danger{% else %}bg-dark{% endif %}">
+                                                {{ task.get_priority_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if task.due_date %}
+                                            {{ task.due_date|date:"M d, Y" }}
+                                            {% else %}
+                                            <span class="text-muted">No due date</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if can_edit %}
+                                            <a href="{% url 'task_update' pk=task.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <p class="text-muted">No tasks created yet</p>
+                            {% if can_edit %}
+                            <a href="{% url 'task_create' project_id=project.id %}" class="btn btn-primary">Create Task</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+                        {% if documents %}
+                        <div class="list-group">
+                            {% for doc in documents %}
+                            <div class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ doc.name }}</h5>
+                                    <small>Uploaded: {{ doc.uploaded_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-1">Uploaded by {{ doc.uploaded_by.username }}</p>
+                                <a href="{{ doc.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">View Document</a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <p class="text-muted">No documents uploaded</p>
+                            {% if can_edit %}
+                            <a href="{% url 'document_upload' project_id=project.id %}" class="btn btn-primary">Upload Document</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if is_admin %}
+                    <div class="card tab-pane fade" id="collaborators" role="tabpanel" aria-labelledby="collaborators-tab">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Collaborators</h5>
+                            <a href="{% url 'add_collaborator' project.id %}" class="btn btn-sm btn-primary">Add</a>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Permission</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for collaborator in project.collaborators.all %}
+                                    <tr>
+                                        <td>{{ collaborator.user.username }}</td>
+                                        <td>{{ collaborator.get_permission_display }}</td>
+                                        <td>
+                                            <a href="{% url 'edit_collaborator' project.id collaborator.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="tab-pane fade" id="collaborators" role="tabpanel" aria-labelledby="collaborators-tab">
+                        {% if project.collaborators.all %}
+                        <div class="list-group">
+                            <div class="list-group-item bg-light">
+                                <div class="d-flex justify-content-between">
+                                    <div><strong>User</strong></div>
+                                    <div><strong>Permission</strong></div>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>{{ project.created_by.username }}</div>
+                                    <div><span class="badge bg-dark">Owner</span></div>
+                                </div>
+                            </div>
+                            {% for collaborator in project.collaborators.all %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>{{ collaborator.user.username }}</div>
+                                    <div>
+                                        <span class="badge {% if collaborator.permission == 'admin' %}bg-danger{% elif collaborator.permission == 'editor' %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ collaborator.get_permission_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <p class="text-muted">No collaborators yet</p>
+                            {% if is_admin %}
+                            <a href="{% url 'add_collaborator' project_id=project.id %}" class="btn btn-primary">Add Collaborator</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Project Details</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ project.description }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Task Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 25px;">
+                    {% if task_counts.todo > 0 %}
+                    <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ task_counts.todo|default:0|floatformat:0 }}%" title="To Do">
+                        {{ task_counts.todo }} To Do
+                    </div>
+                    {% endif %}
+                    {% if task_counts.in_progress > 0 %}
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ task_counts.in_progress|default:0|floatformat:0 }}%" title="In Progress">
+                        {{ task_counts.in_progress }} In Progress
+                    </div>
+                    {% endif %}
+                    {% if task_counts.review > 0 %}
+                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ task_counts.review|default:0|floatformat:0 }}%" title="Review">
+                        {{ task_counts.review }} Review
+                    </div>
+                    {% endif %}
+                    {% if task_counts.done > 0 %}
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ task_counts.done|default:0|floatformat:0 }}%" title="Done">
+                        {{ task_counts.done }} Done
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>To Do</span>
+                        <span class="badge bg-secondary rounded-pill">{{ task_counts.todo }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>In Progress</span>
+                        <span class="badge bg-primary rounded-pill">{{ task_counts.in_progress }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Review</span>
+                        <span class="badge bg-info rounded-pill">{{ task_counts.review }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Done</span>
+                        <span class="badge bg-success rounded-pill">{{ task_counts.done }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'taskmanager/base.html' %}
+
+{% block title %}Upload Document | {{ project.name }} | Tasksync{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Upload Document</h2>
+        <p class="text-muted">Project: {{ project.name }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Document Name</label>
+                        {{ form.name.errors }}
+                        <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                               id="{{ form.name.id_for_label }}" name="{{ form.name.html_name }}"
+                               value="{{ form.name.value|default:'' }}" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.file.id_for_label }}" class="form-label">Upload File</label>
+                        {{ form.file.errors }}
+                        <input type="file" class="form-control {% if form.file.errors %}is-invalid{% endif %}"
+                               id="{{ form.file.id_for_label }}" name="{{ form.file.html_name }}" required>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'project_detail' pk=project.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Upload Document</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
