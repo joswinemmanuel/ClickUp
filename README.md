@@ -1,4 +1,4 @@
-# Tasksync
+# Task-Sync
 
 ## Project Description
 Tasksync is a task management web application built with Django. It allows users to create, manage, and collaborate on tasks and projects efficiently. The application supports user authentication, project and task management, document uploads, and notifications.
